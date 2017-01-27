@@ -10,9 +10,9 @@ import com.amazonaws.services.lambda.runtime.RequestHandler;
 public class JavaHelloWorld implements RequestHandler<Request, Response> {
 	@Override
 	public Response handleRequest(Request request, Context context) {
-		context.getLogger().log(request.getFirstName() + " " + request.getLastName() + ", name=" + request.getName());
-		String greetingStr = String.format("Hello %s %s. name=%s", request.getFirstName(), request.getLastName(),
-				request.getName());
+		context.getLogger().log(request.toString());
+		String greetingStr = String.format("Hello %s %s. name=%s, qBreed=%s, body=%s", request.getFirstName(),
+				request.getLastName(), request.getName(), request.getqBreed(), request.getBody());
 		return new Response(greetingStr);		
 	}
 }
