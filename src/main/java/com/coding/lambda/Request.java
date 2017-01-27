@@ -1,18 +1,31 @@
 package com.coding.lambda;
 
 public class Request {
-    String firstName;
-    String lastName;
+	// path variables
+	private String name;
+	
+	// POST JSON payload
+	private String firstName;
+    private String lastName;
 
     public Request() {
     }
 
-    public Request(String firstName, String lastName) {
+    public Request(String firstName, String lastName, String name) {
         this.firstName = firstName;
         this.lastName = lastName;
+        this.name = name;
     }
 
-    public String getFirstName() {
+    public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public String getFirstName() {
         return firstName;
     }
 
@@ -29,3 +42,4 @@ public class Request {
     }
 
 }
+
