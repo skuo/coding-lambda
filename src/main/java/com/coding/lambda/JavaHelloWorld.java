@@ -7,15 +7,11 @@ import com.amazonaws.services.lambda.runtime.RequestHandler;
  * Lambda function that simply prints "Hello World" if the input String is not
  * provided, otherwise, print "Hello " with the provided input String.
  */
-public class JavaHelloWorld implements RequestHandler<String, String> {
+public class JavaHelloWorld implements RequestHandler<Request, Response> {
 	@Override
-	public String handleRequest(String input, Context context) {
-		/*
-		String output = "Hello " + ((input != null && !input.isEmpty()) ? input : "World");
-		context.getLogger().log(output);
-		return output;
-		*/
-		context.getLogger().log(input);
-		return input;		
+	public Response handleRequest(Request request, Context context) {
+		context.getLogger().log(request.firstName + " " + request.lastName);
+		String greetingStr = String.format("Hello %s %s.", request.firstName, request.lastName);
+		return new Response(greetingStr);		
 	}
 }
