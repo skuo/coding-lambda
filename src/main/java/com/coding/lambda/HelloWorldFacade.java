@@ -59,7 +59,7 @@ public class HelloWorldFacade {
 		logReqMap("body", body, logger);
 		// parameters
 		Map<String,Map<String,String>> parameters = request.getParams();
-		logMapOfReqMap("parameters", parameters, logger);
+		logMapOfReqMap("params", parameters, logger);
 		// stage
 		Map<String,String> stage = request.getStage();
 		logReqMap("stage", stage, logger);
@@ -68,10 +68,10 @@ public class HelloWorldFacade {
 		logReqMap("context", ctx, logger);
 		
 		// construct response
-		String greetingStr = String.format("Body %s %s. queryParams[name]=%s, pathParams[breed]=%s", 
+		String greetingStr = String.format("Body %s %s. params.path[name]=%s, params.querystring[breed]=%s", 
 				body.get("firstName"), body.get("lastName"),
 				parameters.get("path").get("name"),
-				parameters.get("querystring").get("querystring_breed"));
+				parameters.get("querystring").get("breed"));
 		return new Response(greetingStr);		
 	}
 
