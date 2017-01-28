@@ -6,10 +6,33 @@ import com.amazonaws.services.lambda.runtime.Context;
 
 public class HelloWorldFacade {
 
-	public Response handleRequest(Map<String,String> request, Context context) {
-		context.getLogger().log(request.get("firstName") + " " + request.get("lastName") + ", name=" + request.get("name"));
-		String greetingStr = String.format("Hello %s %s. name=%s", request.get("firstName"), request.get("lastName"),
-				request.get("name"));
+	/* The expected json
+{
+	"pathParams":
+	{
+		"name": "bright"
+	}
+	"queryParams":
+	{
+		"breed": "curly coded retriever"
+	}
+	"body": 
+  	{
+		"firstName": "DogVacay",
+		"lastName": "Facade",
+  	}
+}
+	 */
+	public Response handleRequest(FacadeRequest request, Context context) {
+		Map<String,String> body = request.getBody();
+		Map<String,String> queryParams = request.getQueryParams();
+		Map<String,String> pathParams = request.getPathParams();
+		context.getLogger().log(body.get("firstName") + " " + body.get("lastName") + ", name=" + pathParams.get("name") +
+				"breed" + queryParams.get("breed"));
+		String greetingStr = String.format("Body %s %s. queryParams[name]=%s, pathParams[breed]=%s", 
+				body.get("firstName"), body.get("lastName"),
+				pathParams.get("name"),
+				queryParams.get("breed"));
 		return new Response(greetingStr);		
 	}
 
