@@ -13,6 +13,6 @@ public class JavaHelloWorld implements RequestHandler<Request, Response> {
 		context.getLogger().log(request.toString());
 		String greetingStr = String.format("Hello %s %s. name=%s, qBreed=%s, body=%s", request.getFirstName(),
 				request.getLastName(), request.getName(), request.getqBreed(), request.getBody());
-		return new Response(greetingStr);		
+		return new Response(greetingStr,"");		
 	}
 }

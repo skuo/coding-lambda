@@ -1,7 +1,16 @@
 package com.coding.lambda;
 
 public class Response {
-    String greetings;
+    private String greetings;
+    private String data;
+
+    public Response() {
+    }
+
+    public Response(String greetings, String data) {
+        this.greetings = greetings;
+        this.data = data;
+    }
 
     public String getGreetings() {
         return greetings;
@@ -11,10 +20,12 @@ public class Response {
         this.greetings = greetings;
     }
 
-    public Response(String greetings) {
-        this.greetings = greetings;
+    public String getData() {
+        return data;
     }
 
-    public Response() {
+    public void setData(String data) {
+        this.data = data;
     }
+
 }

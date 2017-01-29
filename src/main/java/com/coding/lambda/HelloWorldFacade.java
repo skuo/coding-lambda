@@ -1,6 +1,15 @@
 package com.coding.lambda;
 
+import java.io.IOException;
 import java.util.Map;
+
+import org.apache.http.HttpEntity;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.LambdaLogger;
@@ -55,24 +64,28 @@ public class HelloWorldFacade {
 	public Response handleRequest(FacadeRequest request, Context context) {
 		LambdaLogger logger = context.getLogger();
 		// body
-		Map<String, String> body = request.getBody();
-		logReqMap("body", body, logger);
+		Map<String, String> requestBody = request.getBody();
+		logReqMap("body", requestBody, logger);
 		// parameters
-		Map<String,Map<String,String>> parameters = request.getParams();
-		logMapOfReqMap("params", parameters, logger);
+		Map<String,Map<String,String>> requestParams = request.getParams();
+		logMapOfReqMap("params", requestParams, logger);
 		// stage
-		Map<String,String> stage = request.getStage();
-		logReqMap("stage", stage, logger);
+		Map<String,String> requestStage = request.getStage();
+		logReqMap("stage", requestStage, logger);
 		// context
-		Map<String,String> ctx = request.getContext();
-		logReqMap("context", ctx, logger);
+		Map<String,String> requestCtx = request.getContext();
+		logReqMap("context", requestCtx, logger);
+		
+		// call other endpoints
+		String getBody = doGet("https://41588xzcia.execute-api.us-west-2.amazonaws.com/sandbox/nodelambda", logger);
 		
 		// construct response
 		String greetingStr = String.format("Body %s %s. params.path[name]=%s, params.querystring[breed]=%s", 
-				body.get("firstName"), body.get("lastName"),
-				parameters.get("path").get("name"),
-				parameters.get("querystring").get("breed"));
-		return new Response(greetingStr);		
+				requestBody.get("firstName"), requestBody.get("lastName"),
+				requestParams.get("path").get("name"),
+				requestParams.get("querystring").get("breed"));
+		
+		return new Response(greetingStr, getBody);		
 	}
 
 	private void logMapOfReqMap(String attr, Map<String,Map<String,String>> mapOfReqMap, LambdaLogger logger) {
@@ -95,4 +108,37 @@ public class HelloWorldFacade {
 		logger.log(sb.toString());
 	}
 
+	private String doGet(String url, LambdaLogger logger) {
+	    logger.log("doGet: " + url);
+	    String body = null;
+	    CloseableHttpClient client = HttpClients.createDefault();
+	    HttpGet httpGet = new HttpGet(url);
+	    CloseableHttpResponse response = null;
+	    try {
+	        response = client.execute(httpGet);
+	        int status = response.getStatusLine().getStatusCode();
+	        // return null for status not 2xx
+	        if (status < 200 || status >= 300)
+	            return null;
+            HttpEntity entity = response.getEntity();
+            body = EntityUtils.toString(entity);
+            EntityUtils.consume(entity);
+        } catch (ClientProtocolException cpe) {
+            // how to log info, error and etc.
+            logger.log(cpe.getMessage());
+        } catch (IOException ioe) {
+            logger.log(ioe.getMessage());
+        } finally {
+            if (response != null) {
+                try {
+                    response.close();
+                    client.close();
+                } catch (IOException ioe) {
+                    logger.log(ioe.getMessage());
+                }
+            }
+        }
+	    
+	    return body;
+	}
 }
