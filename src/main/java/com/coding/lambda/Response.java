@@ -1,13 +1,15 @@
 package com.coding.lambda;
 
+import java.util.List;
+
 public class Response {
     private String greetings;
-    private String data;
+    private List<String> data;
 
     public Response() {
     }
 
-    public Response(String greetings, String data) {
+    public Response(String greetings, List<String> data) {
         this.greetings = greetings;
         this.data = data;
     }
@@ -20,11 +22,11 @@ public class Response {
         this.greetings = greetings;
     }
 
-    public String getData() {
+    public List<String> getData() {
         return data;
     }
 
-    public void setData(String data) {
+    public void setData(List<String> data) {
         this.data = data;
     }
 

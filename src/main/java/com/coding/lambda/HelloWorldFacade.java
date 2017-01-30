@@ -1,20 +1,25 @@
 package com.coding.lambda;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Map;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.LambdaLogger;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class HelloWorldFacade {
+    private static ObjectMapper objectMapper = new ObjectMapper();
 
 	/* The expected json
 {
@@ -78,6 +83,8 @@ public class HelloWorldFacade {
 		
 		// call other endpoints
 		String getBody = doGet("https://41588xzcia.execute-api.us-west-2.amazonaws.com/sandbox/nodelambda", logger);
+        String postBody = doPost("https://41588xzcia.execute-api.us-west-2.amazonaws.com/sandbox/javalambda/Terry?aBreed=Poodle",
+                requestBody, logger);
 		
 		// construct response
 		String greetingStr = String.format("Body %s %s. params.path[name]=%s, params.querystring[breed]=%s", 
@@ -85,7 +92,7 @@ public class HelloWorldFacade {
 				requestParams.get("path").get("name"),
 				requestParams.get("querystring").get("breed"));
 		
-		return new Response(greetingStr, getBody);		
+		return new Response(greetingStr, Arrays.asList(getBody,postBody));		
 	}
 
 	private void logMapOfReqMap(String attr, Map<String,Map<String,String>> mapOfReqMap, LambdaLogger logger) {
@@ -118,11 +125,11 @@ public class HelloWorldFacade {
 	        response = client.execute(httpGet);
 	        int status = response.getStatusLine().getStatusCode();
 	        // return null for status not 2xx
-	        if (status < 200 || status >= 300)
-	            return null;
-            HttpEntity entity = response.getEntity();
-            body = EntityUtils.toString(entity);
-            EntityUtils.consume(entity);
+	        if (status >= 200 && status < 300) {
+                HttpEntity entity = response.getEntity();
+                body = EntityUtils.toString(entity);
+                EntityUtils.consume(entity);
+	        }
         } catch (ClientProtocolException cpe) {
             // how to log info, error and etc.
             logger.log(cpe.getMessage());
@@ -137,8 +144,43 @@ public class HelloWorldFacade {
                     logger.log(ioe.getMessage());
                 }
             }
-        }
+        }	    
+	    return body;
+	}
+	
+	private String doPost(String url, Map<String,String> requestBody, LambdaLogger logger) {
+	    String body = null;
+        CloseableHttpClient client = HttpClients.createDefault();
+	    HttpPost httpPost = new HttpPost(url);
+        httpPost.addHeader("Content-Type","application/json");
 	    
+        CloseableHttpResponse response = null;
+	    try {
+	        StringEntity jsonPayload = new StringEntity(objectMapper.writeValueAsString(requestBody));
+            httpPost.setEntity(jsonPayload);
+            response = client.execute(httpPost);
+            int status = response.getStatusLine().getStatusCode();
+            // return null for status not 2xx
+            if (status >= 200 && status < 300) {
+                HttpEntity entity = response.getEntity();
+                body = EntityUtils.toString(entity);
+                EntityUtils.consume(entity);
+            }
+        } catch (ClientProtocolException cpe) {
+            // how to log info, error and etc.
+            logger.log(cpe.getMessage());
+        } catch (IOException ioe) {
+            logger.log(ioe.getMessage());
+        } finally {
+            if (response != null) {
+                try {
+                    response.close();
+                    client.close();
+                } catch (IOException ioe) {
+                    logger.log(ioe.getMessage());
+                }
+            }
+        }       	    
 	    return body;
 	}
 }
