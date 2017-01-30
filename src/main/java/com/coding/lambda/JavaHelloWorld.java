@@ -12,9 +12,12 @@ import com.amazonaws.services.lambda.runtime.RequestHandler;
 public class JavaHelloWorld implements RequestHandler<Request, Response> {
 	@Override
 	public Response handleRequest(Request request, Context context) {
+        long start = System.currentTimeMillis();
 		context.getLogger().log(request.toString());
 		String greetingStr = String.format("Hello %s %s. name=%s, qBreed=%s, body=%s", request.getFirstName(),
 				request.getLastName(), request.getName(), request.getqBreed(), request.getBody());
-		return new Response(greetingStr,Arrays.asList(""));		
+        // execution time
+        long totalTime = System.currentTimeMillis()-start;
+		return new Response(greetingStr,Arrays.asList(""),totalTime);		
 	}
 }

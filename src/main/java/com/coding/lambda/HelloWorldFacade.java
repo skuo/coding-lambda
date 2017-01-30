@@ -3,6 +3,8 @@ package com.coding.lambda;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.client.ClientProtocolException;
@@ -67,6 +69,7 @@ public class HelloWorldFacade {
 }
 	 */
 	public Response handleRequest(FacadeRequest request, Context context) {
+        long start = System.currentTimeMillis();
 		LambdaLogger logger = context.getLogger();
 		// body
 		Map<String, String> requestBody = request.getBody();
@@ -92,7 +95,9 @@ public class HelloWorldFacade {
 				requestParams.get("path").get("name"),
 				requestParams.get("querystring").get("breed"));
 		
-		return new Response(greetingStr, Arrays.asList(getBody,postBody));		
+        // execution time
+        long totalTime = System.currentTimeMillis()-start;
+		return new Response(greetingStr, Arrays.asList(getBody,postBody), totalTime);		
 	}
 
 	private void logMapOfReqMap(String attr, Map<String,Map<String,String>> mapOfReqMap, LambdaLogger logger) {
@@ -183,4 +188,46 @@ public class HelloWorldFacade {
         }       	    
 	    return body;
 	}
+
+    public Response handleRequestAsync(FacadeRequest request, Context context)
+            throws InterruptedException, ExecutionException {
+        long start = System.currentTimeMillis();
+        LambdaLogger logger = context.getLogger();
+        // body
+        Map<String, String> requestBody = request.getBody();
+        logReqMap("body", requestBody, logger);
+        // parameters
+        Map<String,Map<String,String>> requestParams = request.getParams();
+        logMapOfReqMap("params", requestParams, logger);
+        // stage
+        Map<String,String> requestStage = request.getStage();
+        logReqMap("stage", requestStage, logger);
+        // context
+        Map<String,String> requestCtx = request.getContext();
+        logReqMap("context", requestCtx, logger);
+        
+        // call other endpoints
+        CompletableFuture<String> getCf = CompletableFuture.supplyAsync(() -> {
+            String getBody = doGet("https://41588xzcia.execute-api.us-west-2.amazonaws.com/sandbox/nodelambda", logger);
+            return getBody;
+        });
+        CompletableFuture<String> postCf = CompletableFuture.supplyAsync(() -> {
+            String postBody = doPost("https://41588xzcia.execute-api.us-west-2.amazonaws.com/sandbox/javalambda/Terry?aBreed=Poodle",
+                    requestBody, logger);
+            return postBody;
+        });
+        // wait until CompletableFutures complete
+        CompletableFuture.allOf(getCf, postCf).join();
+        
+        // construct response
+        String greetingStr = String.format("Body %s %s. params.path[name]=%s, params.querystring[breed]=%s", 
+                requestBody.get("firstName"), requestBody.get("lastName"),
+                requestParams.get("path").get("name"),
+                requestParams.get("querystring").get("breed"));
+        
+        // execution time
+        long totalTime = System.currentTimeMillis()-start;
+        return new Response(greetingStr, Arrays.asList(getCf.get(),postCf.get()), totalTime);      
+    }
+
 }
